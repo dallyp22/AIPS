@@ -34,41 +34,9 @@ app.get('/plants', async () => {
   }
 })
 
-app.get('/orders', async () => {
-  try {
-    const orders = await prisma.order.findMany({
-      include: {
-        sku: true,
-        plannedWorkcenter: true
-      },
-      take: 50,
-      orderBy: { dueAt: 'asc' }
-    })
-    return orders
-  } catch (error) {
-    console.error('Orders error:', error)
-    throw error
-  }
-})
+// Orders endpoint moved below
 
-app.get('/operators', async () => {
-  try {
-    const operators = await prisma.operator.findMany({
-      include: {
-        department: true,
-        competencies: {
-          include: {
-            skill: true
-          }
-        }
-      }
-    })
-    return operators
-  } catch (error) {
-    console.error('Operators error:', error)
-    throw error
-  }
-})
+// Operators endpoint moved below with authentication
 
 // Data import endpoint
 app.post('/admin/import-production-data', async () => {
