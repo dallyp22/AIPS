@@ -25,7 +25,7 @@ function getKey(header: any, callback: any) {
 const jwtOptions = {
   audience: process.env.AUTH0_AUDIENCE,
   issuer: `https://${process.env.AUTH0_DOMAIN}/`,
-  algorithms: ['RS256'] as const,
+  algorithms: ['RS256'],
 }
 
 // Extended request type with user info
