@@ -8,7 +8,12 @@ import { authenticate, requireRole, optionalAuth, AuthenticatedRequest } from '.
 const app = Fastify({ logger: false })
 
 const allowedOrigin = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:5173']
-app.register(cors, { origin: allowedOrigin })
+console.log('🔒 CORS allowed origins:', allowedOrigin)
+app.register(cors, { 
+  origin: allowedOrigin,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+})
 
 app.get('/health', async () => ({ ok: true, ts: Date.now() }))
 
@@ -1019,10 +1024,13 @@ app.setErrorHandler((error: unknown, req, reply) => {
   reply.code(500).send({ message: 'Internal Server Error' })
 })
 
-app.listen({ port: 3000 }, (err, addr) => {
+const PORT = process.env.PORT || 3000
+const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost'
+
+app.listen({ port: PORT, host: HOST }, (err, addr) => {
   if (err) {
     console.error(err)
     process.exit(1)
   }
-  console.log('AIPS API on', addr)
+  console.log('🚀 AIPS API on', addr)
 })
