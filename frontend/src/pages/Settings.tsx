@@ -663,7 +663,7 @@ export default function Settings(){
 
                 <Alert severity="info" sx={{ mb: 2 }}>
                   <Typography variant="body2">
-                    <strong>First Time Setup:</strong> If this is your first deployment, click "Initialize Database" to create the database schema, then "Import Production Data".
+                    <strong>Database Setup:</strong> Click "Initialize Database" to create/recreate all database tables with the correct schema, then "Import Production Data".
                   </Typography>
                 </Alert>
 
@@ -680,7 +680,7 @@ export default function Settings(){
                     onClick={handleInitDatabase}
                     disabled={importLoading}
                   >
-                    {importLoading ? 'Working...' : 'Initialize Database'}
+                    {importLoading ? 'Working...' : 'Recreate Database Schema'}
                   </Button>
 
                   <Button

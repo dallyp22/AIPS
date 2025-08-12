@@ -4,9 +4,30 @@ export async function createDatabaseSchema() {
   console.log('🏗️  Creating complete database schema...')
   
   try {
+    // First, drop all tables to ensure clean schema (in reverse order for foreign keys)
+    console.log('🧹 Dropping existing tables for clean schema...')
+    
+    await prisma.$executeRaw`DROP TABLE IF EXISTS "ShiftAssignment" CASCADE;`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS "SkillRequirement" CASCADE;`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS "OperatorCompetency" CASCADE;`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS "Changeover" CASCADE;`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS "ScheduleBlock" CASCADE;`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS "Order" CASCADE;`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS "Product" CASCADE;`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS "SKU" CASCADE;`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS "Operator" CASCADE;`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS "Skill" CASCADE;`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS "ShiftPattern" CASCADE;`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS "Holiday" CASCADE;`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS "Workcenter" CASCADE;`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS "Department" CASCADE;`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS "Plant" CASCADE;`
+    
+    console.log('✅ Existing tables dropped, creating fresh schema...')
+    
     // Create all tables in correct order (respecting foreign keys)
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "Plant" (
+      CREATE TABLE "Plant" (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         "tenantId" TEXT DEFAULT 'default'
@@ -14,7 +35,7 @@ export async function createDatabaseSchema() {
     `
     
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "Department" (
+      CREATE TABLE "Department" (
         id SERIAL PRIMARY KEY,
         "plantId" INTEGER NOT NULL REFERENCES "Plant"(id),
         name TEXT NOT NULL,
@@ -23,7 +44,7 @@ export async function createDatabaseSchema() {
     `
     
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "Workcenter" (
+      CREATE TABLE "Workcenter" (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         "departmentId" INTEGER NOT NULL REFERENCES "Department"(id),
@@ -39,7 +60,7 @@ export async function createDatabaseSchema() {
     `
     
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "Holiday" (
+      CREATE TABLE "Holiday" (
         id SERIAL PRIMARY KEY,
         date DATE NOT NULL,
         label TEXT NOT NULL,
@@ -48,7 +69,7 @@ export async function createDatabaseSchema() {
     `
     
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "SKU" (
+      CREATE TABLE "SKU" (
         id SERIAL PRIMARY KEY,
         code TEXT NOT NULL UNIQUE,
         family TEXT,
@@ -57,7 +78,7 @@ export async function createDatabaseSchema() {
     `
     
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "Product" (
+      CREATE TABLE "Product" (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         "skuId" INTEGER NOT NULL REFERENCES "SKU"(id)
@@ -65,7 +86,7 @@ export async function createDatabaseSchema() {
     `
     
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "Order" (
+      CREATE TABLE "Order" (
         id SERIAL PRIMARY KEY,
         "orderNo" TEXT NOT NULL UNIQUE,
         "skuId" INTEGER NOT NULL REFERENCES "SKU"(id),
@@ -81,7 +102,7 @@ export async function createDatabaseSchema() {
     `
     
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "ScheduleBlock" (
+      CREATE TABLE "ScheduleBlock" (
         id SERIAL PRIMARY KEY,
         "workcenterId" INTEGER NOT NULL REFERENCES "Workcenter"(id),
         "orderId" INTEGER REFERENCES "Order"(id),
@@ -91,7 +112,7 @@ export async function createDatabaseSchema() {
     `
     
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "Changeover" (
+      CREATE TABLE "Changeover" (
         id SERIAL PRIMARY KEY,
         "workcenterId" INTEGER NOT NULL REFERENCES "Workcenter"(id),
         "fromBlockId" INTEGER NOT NULL REFERENCES "ScheduleBlock"(id),
@@ -104,7 +125,7 @@ export async function createDatabaseSchema() {
     `
     
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "Skill" (
+      CREATE TABLE "Skill" (
         id SERIAL PRIMARY KEY,
         code TEXT NOT NULL UNIQUE,
         name TEXT NOT NULL,
@@ -118,7 +139,7 @@ export async function createDatabaseSchema() {
     `
     
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "Operator" (
+      CREATE TABLE "Operator" (
         id SERIAL PRIMARY KEY,
         "employeeId" TEXT NOT NULL UNIQUE,
         "firstName" TEXT NOT NULL,
@@ -136,7 +157,7 @@ export async function createDatabaseSchema() {
     `
     
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "OperatorCompetency" (
+      CREATE TABLE "OperatorCompetency" (
         id SERIAL PRIMARY KEY,
         "operatorId" INTEGER NOT NULL REFERENCES "Operator"(id),
         "skillId" INTEGER NOT NULL REFERENCES "Skill"(id),
@@ -151,7 +172,7 @@ export async function createDatabaseSchema() {
     `
     
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "SkillRequirement" (
+      CREATE TABLE "SkillRequirement" (
         id SERIAL PRIMARY KEY,
         "workcenterId" INTEGER NOT NULL REFERENCES "Workcenter"(id),
         "skillId" INTEGER NOT NULL REFERENCES "Skill"(id),
@@ -163,7 +184,7 @@ export async function createDatabaseSchema() {
     `
     
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "ShiftPattern" (
+      CREATE TABLE "ShiftPattern" (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         description TEXT,
@@ -175,7 +196,7 @@ export async function createDatabaseSchema() {
     `
     
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "ShiftAssignment" (
+      CREATE TABLE "ShiftAssignment" (
         id SERIAL PRIMARY KEY,
         "operatorId" INTEGER NOT NULL REFERENCES "Operator"(id),
         "shiftPatternId" INTEGER NOT NULL REFERENCES "ShiftPattern"(id),
