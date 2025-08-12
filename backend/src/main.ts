@@ -4,6 +4,7 @@ import cors from '@fastify/cors'
 import { z } from 'zod'
 import { prisma } from './prisma'
 import { authenticate, requireRole, optionalAuth, AuthenticatedRequest } from './auth'
+import { importProductionData } from './importData'
 
 const app = Fastify({ logger: false })
 
@@ -65,6 +66,17 @@ app.get('/operators', async () => {
     return operators
   } catch (error) {
     console.error('Operators error:', error)
+    throw error
+  }
+})
+
+// Data import endpoint
+app.post('/admin/import-production-data', async () => {
+  try {
+    const result = await importProductionData()
+    return result
+  } catch (error) {
+    console.error('Import failed:', error)
     throw error
   }
 })

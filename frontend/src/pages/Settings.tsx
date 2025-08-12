@@ -31,8 +31,12 @@ import {
   CardContent,
   Divider,
   FormGroup,
-  Checkbox
+  Checkbox,
+  LinearProgress
 } from '@mui/material'
+import { Upload, Database, Factory } from '@mui/icons-material'
+import { useAuth } from '../auth/useAuth'
+import { apiClient } from '../api/client'
 import { 
   Add as AddIcon, 
   Delete as DeleteIcon, 
@@ -207,6 +211,7 @@ export default function Settings(){
           <Tab label="Holidays" />
           <Tab label="Shift Patterns" />
           <Tab label="Overtime Settings" />
+          <Tab label="Data Import" />
         </Tabs>
       </Box>
 
@@ -544,6 +549,101 @@ export default function Settings(){
                   <Button variant="outlined" startIcon={<AddIcon />}>
                     Add Override Period
                   </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      </TabPanel>
+
+      {/* Data Import Tab */}
+      <TabPanel value={activeTab} index={4}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={8}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Database sx={{ mr: 1, color: 'primary.main' }} />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    Production Data Import
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Import comprehensive manufacturing data to populate your AIPS system with realistic production scenarios.
+                </Typography>
+
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                    What will be imported:
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    <Chip icon={<Factory />} label="Manufacturing Plant" size="small" />
+                    <Chip label="4 Departments" size="small" />
+                    <Chip label="5 Workcenters" size="small" />
+                    <Chip label="10 Operators" size="small" />
+                    <Chip label="25 Production Orders" size="small" />
+                    <Chip label="15 Schedule Blocks" size="small" />
+                    <Chip label="Skills & Competencies" size="small" />
+                    <Chip label="Shift Assignments" size="small" />
+                  </Box>
+                </Box>
+
+                <Alert severity="warning" sx={{ mb: 3 }}>
+                  <Typography variant="body2">
+                    <strong>Warning:</strong> This will replace all existing production data. Make sure you have a backup if needed.
+                  </Typography>
+                </Alert>
+
+                <Button
+                  variant="contained"
+                  startIcon={<Upload />}
+                  onClick={() => {/* We'll add this function */}}
+                  size="large"
+                  sx={{ mr: 2 }}
+                >
+                  Import Production Data
+                </Button>
+                
+                <Button
+                  variant="outlined"
+                  onClick={() => {/* We'll add this function */}}
+                >
+                  Check Current Data
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                  Import Status
+                </Typography>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Ready to import comprehensive manufacturing data
+                  </Typography>
+                </Box>
+                
+                <Divider sx={{ my: 2 }} />
+                
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                  Current System Status:
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2">Plants:</Typography>
+                    <Typography variant="body2" color="text.secondary">Loading...</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2">Orders:</Typography>
+                    <Typography variant="body2" color="text.secondary">Loading...</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2">Operators:</Typography>
+                    <Typography variant="body2" color="text.secondary">Loading...</Typography>
+                  </Box>
                 </Box>
               </CardContent>
             </Card>
