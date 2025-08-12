@@ -123,6 +123,38 @@ export async function importProductionData() {
       })
     }
 
+    // Create Operators
+    console.log('👥 Creating operators...')
+    await prisma.operator.createMany({
+      data: [
+        {
+          employeeId: 'EMP001', firstName: 'John', lastName: 'Smith',
+          email: 'john.smith@aips.com', hireDate: new Date('2022-01-15'),
+          departmentId: prodDept.id, basePayRate: 25.50
+        },
+        {
+          employeeId: 'EMP002', firstName: 'Sarah', lastName: 'Johnson',
+          email: 'sarah.johnson@aips.com', hireDate: new Date('2021-11-03'),
+          departmentId: prodDept.id, basePayRate: 27.25
+        },
+        {
+          employeeId: 'EMP003', firstName: 'Mike', lastName: 'Chen',
+          email: 'mike.chen@aips.com', hireDate: new Date('2023-03-20'),
+          departmentId: qcDept.id, basePayRate: 29.00
+        },
+        {
+          employeeId: 'EMP004', firstName: 'Lisa', lastName: 'Rodriguez',
+          email: 'lisa.rodriguez@aips.com', hireDate: new Date('2022-08-12'),
+          departmentId: packDept.id, basePayRate: 23.75
+        },
+        {
+          employeeId: 'EMP005', firstName: 'David', lastName: 'Wilson',
+          email: 'david.wilson@aips.com', hireDate: new Date('2020-05-07'),
+          departmentId: maintDept.id, basePayRate: 32.00
+        }
+      ]
+    })
+
     console.log('✅ Production data imported successfully!')
     return { success: true, message: 'Production data imported' }
 

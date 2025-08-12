@@ -106,18 +106,32 @@ export async function createDatabaseSchema() {
     await prisma.$executeRaw`
       CREATE TABLE IF NOT EXISTS "Skill" (
         id SERIAL PRIMARY KEY,
+        code TEXT NOT NULL UNIQUE,
         name TEXT NOT NULL,
-        description TEXT
+        description TEXT,
+        category TEXT NOT NULL,
+        "isCore" BOOLEAN DEFAULT false,
+        "isCertification" BOOLEAN DEFAULT false,
+        "expiryMonths" INTEGER,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `
     
     await prisma.$executeRaw`
       CREATE TABLE IF NOT EXISTS "Operator" (
         id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        "employeeId" TEXT,
+        "employeeId" TEXT NOT NULL UNIQUE,
+        "firstName" TEXT NOT NULL,
+        "lastName" TEXT NOT NULL,
+        email TEXT,
+        phone TEXT,
+        "hireDate" TIMESTAMP NOT NULL,
         "departmentId" INTEGER REFERENCES "Department"(id),
-        "isActive" BOOLEAN DEFAULT true
+        "isActive" BOOLEAN DEFAULT true,
+        "basePayRate" DOUBLE PRECISION,
+        "shiftPreference" TEXT,
+        notes TEXT,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `
     
@@ -127,8 +141,12 @@ export async function createDatabaseSchema() {
         "operatorId" INTEGER NOT NULL REFERENCES "Operator"(id),
         "skillId" INTEGER NOT NULL REFERENCES "Skill"(id),
         level INTEGER NOT NULL DEFAULT 1,
-        "certifiedAt" DATE,
-        "expiresAt" DATE
+        "certifiedAt" TIMESTAMP,
+        "expiresAt" TIMESTAMP,
+        "certifiedBy" TEXT,
+        notes TEXT,
+        "isActive" BOOLEAN DEFAULT true,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `
     
@@ -137,7 +155,10 @@ export async function createDatabaseSchema() {
         id SERIAL PRIMARY KEY,
         "workcenterId" INTEGER NOT NULL REFERENCES "Workcenter"(id),
         "skillId" INTEGER NOT NULL REFERENCES "Skill"(id),
-        "requiredLevel" INTEGER NOT NULL DEFAULT 1
+        "minLevel" INTEGER NOT NULL DEFAULT 1,
+        "isRequired" BOOLEAN DEFAULT true,
+        "shiftType" TEXT,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `
     
