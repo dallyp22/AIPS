@@ -1,0 +1,52 @@
+{
+  "A": {
+    "description": "Simple family change",
+    "minutes": 15,
+    "complexityTier": "Simple"
+  },
+  "B": {
+    "description": "Standard changeover",
+    "minutes": 25,
+    "complexityTier": "Standard"
+  },
+  "C": {
+    "description": "Medium complexity",
+    "minutes": 40,
+    "complexityTier": "Medium"
+  },
+  "D": {
+    "description": "Size change required",
+    "minutes": 55,
+    "complexityTier": "Medium"
+  },
+  "E": {
+    "description": "Tool change needed",
+    "minutes": 70,
+    "complexityTier": "Complex"
+  },
+  "F": {
+    "description": "Setup verification",
+    "minutes": 85,
+    "complexityTier": "Complex"
+  },
+  "G": {
+    "description": "Major reconfiguration",
+    "minutes": 120,
+    "complexityTier": "Major"
+  },
+  "H": {
+    "description": "Process change",
+    "minutes": 150,
+    "complexityTier": "Major"
+  },
+  "I": {
+    "description": "Equipment swap",
+    "minutes": 180,
+    "complexityTier": "Critical"
+  },
+  "J": {
+    "description": "Complete line reset",
+    "minutes": 240,
+    "complexityTier": "Critical"
+  }
+}
