@@ -31,18 +31,18 @@ RUN pnpm install --frozen-lockfile
 WORKDIR /app/backend
 RUN pnpm run build
 
-# Create a startup script to handle SQLite setup
-RUN echo '#!/bin/sh\n\
-echo "Setting up SQLite database..."\n\
-cd /app/backend\n\
-export DATABASE_URL="file:./data/prod.db"\n\
-mkdir -p ./data\n\
-pnpm exec prisma db push --force-reset || echo "Database setup failed, continuing..."\n\
-echo "Starting application..."\n\
-exec pnpm start' > /app/start.sh && chmod +x /app/start.sh
+# Create data directory for SQLite
+RUN mkdir -p /app/backend/data
 
 # Expose port
 EXPOSE 3000
 
-# Start the application
-CMD ["/app/start.sh"]
+# Set working directory for startup
+WORKDIR /app/backend
+
+# Set environment for production
+ENV DATABASE_URL="file:./data/prod.db"
+ENV NODE_ENV=production
+
+# Start the application with database setup
+CMD ["sh", "-c", "echo 'Setting up SQLite database...' && pnpm exec prisma db push --force-reset || echo 'Database setup failed, continuing...' && echo 'Starting application...' && exec pnpm start"]
