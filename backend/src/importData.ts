@@ -4,23 +4,27 @@ export async function importProductionData() {
   console.log('🏭 Starting Production Data Import...')
   
   try {
-    // Clear existing data
+    // Clear existing data (with error handling for new databases)
     console.log('🧹 Cleaning existing data...')
-    await prisma.shiftAssignment.deleteMany()
-    await prisma.operatorCompetency.deleteMany()
-    await prisma.skillRequirement.deleteMany()
-    await prisma.changeover.deleteMany()
-    await prisma.scheduleBlock.deleteMany()
-    await prisma.order.deleteMany()
-    await prisma.product.deleteMany()
-    await prisma.sKU.deleteMany()
-    await prisma.operator.deleteMany()
-    await prisma.skill.deleteMany()
-    await prisma.shiftPattern.deleteMany()
-    await prisma.holiday.deleteMany()
-    await prisma.workcenter.deleteMany()
-    await prisma.department.deleteMany()
-    await prisma.plant.deleteMany()
+    try {
+      await prisma.shiftAssignment.deleteMany()
+      await prisma.operatorCompetency.deleteMany()
+      await prisma.skillRequirement.deleteMany()
+      await prisma.changeover.deleteMany()
+      await prisma.scheduleBlock.deleteMany()
+      await prisma.order.deleteMany()
+      await prisma.product.deleteMany()
+      await prisma.sKU.deleteMany()
+      await prisma.operator.deleteMany()
+      await prisma.skill.deleteMany()
+      await prisma.shiftPattern.deleteMany()
+      await prisma.holiday.deleteMany()
+      await prisma.workcenter.deleteMany()
+      await prisma.department.deleteMany()
+      await prisma.plant.deleteMany()
+    } catch (error) {
+      console.log('⚠️  Some tables may not exist yet, continuing...')
+    }
 
     // Create Plant
     console.log('🏗️  Creating plant structure...')
