@@ -59,6 +59,11 @@ export async function authenticate(
     }
 
     const token = authHeader.substring(7)
+    
+    // Debug: Decode token without verification to see audience
+    const unverifiedDecoded = jwt.decode(token, { complete: true })
+    console.log('🔍 Token Debug - Audience in token:', unverifiedDecoded?.payload?.aud)
+    console.log('🔍 Token Debug - Expected audience:', process.env.AUTH0_AUDIENCE)
 
     // Verify JWT token
     const decoded = await new Promise<JwtPayload | string>((resolve, reject) => {
