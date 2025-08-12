@@ -98,7 +98,10 @@ export async function importProductionData() {
       data: {
         code: 'CTRL-001',
         family: 'Controllers',
-        familyColorHex: '#2196F3'
+        familyColorHex: '#2196F3',
+        formula: 'Standard Electronic Controller',
+        bottleSize: null,
+        caseSize: '24 units'
       }
     })
 

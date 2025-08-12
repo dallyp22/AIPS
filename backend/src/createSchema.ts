@@ -72,8 +72,11 @@ export async function createDatabaseSchema() {
       CREATE TABLE "SKU" (
         id SERIAL PRIMARY KEY,
         code TEXT NOT NULL UNIQUE,
-        family TEXT,
-        "familyColorHex" TEXT
+        family TEXT NOT NULL,
+        "familyColorHex" TEXT,
+        formula TEXT,
+        "bottleSize" TEXT,
+        "caseSize" TEXT
       );
     `
     
