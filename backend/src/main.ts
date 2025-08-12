@@ -1011,8 +1011,11 @@ app.post('/schedule/board', async (req: FastifyRequest, reply: FastifyReply) => 
 })
 
 app.get('/reports/daily', async (req: FastifyRequest, _reply: FastifyReply) => {
-  const dateParam = (req.query as any)?.date || new Date().toISOString().split('T')[0]
-  const viewMode = (req.query as any)?.viewMode || 'day'
+  try {
+    console.log('📊 /reports/daily called with query:', req.query)
+    const dateParam = (req.query as any)?.date || new Date().toISOString().split('T')[0]
+    const viewMode = (req.query as any)?.viewMode || 'day'
+    console.log('📊 Processing reports/daily:', { dateParam, viewMode })
   
   // Calculate date range based on view mode
   const startDate = new Date(dateParam + 'T00:00:00Z')
@@ -1116,19 +1119,39 @@ app.get('/reports/daily', async (req: FastifyRequest, _reply: FastifyReply) => {
   if (pctToPlan < 95) rag = 'At-Risk'
   if (pctToPlan < 90) rag = 'Off-Track'
 
-  return {
-    overall: {
-      plannedUnits: totalPlannedUnits,
-      producedUnits: totalProducedUnits,
-      pctToPlan,
-      oee: overallOee,
-      projection: weekProjection,
-      rag,
-      changeoverHours: Math.round(totalChangeoverHours * 10) / 10
-    },
-    lines,
-    date: dateParam,
-    viewMode
+    console.log('📊 Returning reports/daily data:', { totalPlannedUnits, totalProducedUnits, linesCount: lines.length })
+    
+    return {
+      overall: {
+        plannedUnits: totalPlannedUnits,
+        producedUnits: totalProducedUnits,
+        pctToPlan,
+        oee: overallOee,
+        projection: weekProjection,
+        rag,
+        changeoverHours: Math.round(totalChangeoverHours * 10) / 10
+      },
+      lines,
+      date: dateParam,
+      viewMode
+    }
+  } catch (error: any) {
+    console.error('❌ Error in /reports/daily:', error)
+    return {
+      overall: {
+        plannedUnits: 0,
+        producedUnits: 0,
+        pctToPlan: 0,
+        oee: 0,
+        projection: 0,
+        rag: 'Off-Track',
+        changeoverHours: 0
+      },
+      lines: [],
+      date: dateParam,
+      viewMode: viewMode || 'day',
+      error: error.message
+    }
   }
 })
 

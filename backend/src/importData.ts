@@ -158,8 +158,34 @@ export async function importProductionData() {
       ]
     })
 
+    // Create some ScheduleBlocks to populate the dashboard
+    console.log('📅 Creating schedule blocks...')
+    const orders = await prisma.order.findMany({ include: { plannedWorkcenter: true } })
+    
+    for (let i = 0; i < Math.min(orders.length, 8); i++) {
+      const order = orders[i]
+      if (order.plannedWorkcenter) {
+        // Create a schedule block for this order (scheduled for next few days)
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() + Math.floor(i / 2)) // Spread across next 4 days
+        startDate.setHours(8 + (i % 2) * 8, 0, 0, 0) // 8am or 4pm start times
+        
+        const endDate = new Date(startDate)
+        endDate.setHours(startDate.getHours() + 8) // 8-hour blocks
+        
+        await prisma.scheduleBlock.create({
+          data: {
+            workcenterId: order.plannedWorkcenter.id,
+            orderId: order.id,
+            startAt: startDate,
+            endAt: endDate
+          }
+        })
+      }
+    }
+
     console.log('✅ Production data imported successfully!')
-    return { success: true, message: 'Production data imported' }
+    return { success: true, message: 'Production data imported with schedule blocks' }
 
   } catch (error) {
     console.error('❌ Import failed:', error)
