@@ -1,8 +1,9 @@
-import 'dotenv/config'
+require('dotenv').config()
 import Fastify, { FastifyReply, FastifyRequest } from 'fastify'
 import cors from '@fastify/cors'
 import { z } from 'zod'
 import { prisma } from './prisma'
+import { authenticate, requireRole, optionalAuth, AuthenticatedRequest } from './auth'
 
 const app = Fastify({ logger: false })
 
@@ -10,6 +11,38 @@ const allowedOrigin = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',
 app.register(cors, { origin: allowedOrigin })
 
 app.get('/health', async () => ({ ok: true, ts: Date.now() }))
+
+// Authentication endpoints
+app.get('/auth/user', { preHandler: [authenticate] }, async (req: AuthenticatedRequest) => {
+  const user = req.user!
+  
+  // Get user roles from token
+  const roles = user['https://aips.app/roles'] || ['operator']
+  
+  return {
+    id: user.sub,
+    email: user.email,
+    name: user.name || user.email,
+    picture: user.picture,
+    roles,
+    permissions: {
+      canManageOperators: roles.includes('admin') || roles.includes('manager'),
+      canViewReports: true,
+      canManageSkills: roles.includes('admin') || roles.includes('manager'),
+      canManageSchedules: roles.includes('admin') || roles.includes('manager') || roles.includes('planner'),
+    }
+  }
+})
+
+// Public health check (no auth required)
+app.get('/auth/status', async () => {
+  return { 
+    authEnabled: true,
+    domain: process.env.AUTH0_DOMAIN || 'not-configured',
+    audience: process.env.AUTH0_AUDIENCE || 'not-configured',
+    clientId: process.env.AUTH0_CLIENT_ID || 'not-configured'
+  }
+})
 
 const NewWorkcenter = z.object({
   plantId: z.number(),
@@ -362,7 +395,7 @@ const NewShiftAssignment = z.object({
 })
 
 // OPERATORS ENDPOINTS
-app.get('/operators', async (req: FastifyRequest, _reply: FastifyReply) => {
+app.get('/operators', { preHandler: [authenticate] }, async (req: AuthenticatedRequest, _reply: FastifyReply) => {
   const departmentId = z.coerce.number().optional().parse((req.query as any)?.departmentId)
   const isActive = z.coerce.boolean().optional().parse((req.query as any)?.isActive)
   
@@ -413,7 +446,7 @@ app.get('/operators/:id', async (req: FastifyRequest, _reply: FastifyReply) => {
   })
 })
 
-app.post('/operators', async (req: FastifyRequest, reply: FastifyReply) => {
+app.post('/operators', { preHandler: [authenticate, requireRole(['admin', 'manager'])] }, async (req: AuthenticatedRequest, reply: FastifyReply) => {
   const body = NewOperator.parse(req.body)
   const operator = await prisma.operator.create({
     data: {
@@ -489,7 +522,7 @@ app.get('/competencies', async (req: FastifyRequest, _reply: FastifyReply) => {
   })
 })
 
-app.post('/competencies', async (req: FastifyRequest, reply: FastifyReply) => {
+app.post('/competencies', { preHandler: [authenticate, requireRole(['admin', 'manager'])] }, async (req: AuthenticatedRequest, reply: FastifyReply) => {
   const body = NewCompetency.parse(req.body)
   const competency = await prisma.operatorCompetency.create({
     data: {

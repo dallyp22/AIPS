@@ -1,6 +1,7 @@
-import { AppBar, Toolbar, Typography, Box, Drawer, List, ListItemButton, ListItemText, Avatar, Chip } from '@mui/material'
+import { AppBar, Toolbar, Typography, Box, Drawer, List, ListItemButton, ListItemText } from '@mui/material'
 import { Link, useLocation } from 'react-router-dom'
 import StatusPulse from './StatusPulse'
+import UserProfile from '../auth/UserProfile'
 
 const drawerWidth = 280
 
@@ -23,10 +24,7 @@ export default function AppShell({ children }: { children: React.ReactNode }){
         <Toolbar>
           <Typography variant="h6" sx={{ flex: 1, fontFamily: 'Montserrat, Inter, sans-serif' }}>AIPS Command Center</Typography>
           <StatusPulse/>
-          <Box sx={{ ml: 2, display:'flex', alignItems:'center', gap:1 }}>
-            <Chip size="small" label="Planner" variant="outlined" sx={{ borderColor:'rgba(1,209,209,0.5)' }}/>
-            <Avatar sx={{ width: 28, height: 28, bgcolor: 'rgba(1,209,209,0.2)' }}>BP</Avatar>
-          </Box>
+          <UserProfile />
         </Toolbar>
       </AppBar>
       <Drawer variant="permanent" sx={{ width: drawerWidth, [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing:'border-box' } }}>

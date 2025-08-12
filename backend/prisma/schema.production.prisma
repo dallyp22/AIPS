@@ -1,9 +1,12 @@
+// This is your Prisma schema file for PRODUCTION
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -58,70 +61,97 @@ model Holiday {
   id      Int      @id @default(autoincrement())
   plantId Int
   date    DateTime
-  label   String?
+  name    String
   plant   Plant    @relation(fields: [plantId], references: [id])
 }
 
 model SKU {
-  id             Int       @id @default(autoincrement())
-  code           String    @unique
-  family         String
-  familyColorHex String?
-  formula        String?
-  bottleSize     String?
-  caseSize       String?
-  orders         Order[]
-  products       Product[]
+  id                   Int       @id @default(autoincrement())
+  skuNo                String    @unique
+  name                 String
+  description          String?
+  family               String?
+  unitsOfMeasure       String    @default("EA")
+  defaultQuantity      Int       @default(1)
+  baseProcessingTime   Float?
+  setupTime            Float     @default(0)
+  idealCycleTime       Float?
+  rushMultiplier       Float     @default(1.2)
+  colorCode            String?
+  isActive             Boolean   @default(true)
+  createdAt            DateTime  @default(now())
+  orders               Order[]
+  products             Product[]
 }
 
 model Product {
-  id    Int    @id @default(autoincrement())
-  name  String
-  skuId Int
-  sku   SKU    @relation(fields: [skuId], references: [id])
+  id               Int      @id @default(autoincrement())
+  skuId            Int
+  bomVersion       String   @default("1.0")
+  yield            Float    @default(1.0)
+  scrapRate        Float    @default(0.02)
+  qualityStandard  String?
+  packagingType    String?
+  shelfLife        Int?
+  storageCondition String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  sku              SKU      @relation(fields: [skuId], references: [id])
+
+  @@unique([skuId, bomVersion])
 }
 
 model Order {
-  id                  Int             @id @default(autoincrement())
-  orderNo             String          @unique
-  skuId               Int
-  qty                 Int
-  runRateUph          Int
-  performanceLeverPct Float           @default(100)
-  priority            Int             @default(3)
-  dueAt               DateTime
-  workcenterId        Int?
-  shopfloorTitle      String?
-  colorHex            String?
-  plannedWorkcenter   Workcenter?     @relation(fields: [workcenterId], references: [id])
-  sku                 SKU             @relation(fields: [skuId], references: [id])
-  scheduleBlocks      ScheduleBlock[]
+  id             Int             @id @default(autoincrement())
+  orderNo        String          @unique
+  skuId          Int
+  workcenterId   Int
+  quantity       Int
+  priority       Int             @default(5)
+  dueDate        DateTime
+  startDate      DateTime?
+  isRush         Boolean         @default(false)
+  performanceLever Float?
+  colorOverride  String?
+  sku            SKU             @relation(fields: [skuId], references: [id])
+  scheduleBlocks ScheduleBlock[]
+  workcenter     Workcenter      @relation(fields: [workcenterId], references: [id])
 }
 
 model ScheduleBlock {
-  id              Int          @id @default(autoincrement())
-  workcenterId    Int
-  orderId         Int?
-  startAt         DateTime
-  endAt           DateTime
-  toChangeovers   Changeover[] @relation("ToBlock")
-  fromChangeovers Changeover[] @relation("FromBlock")
-  order           Order?       @relation(fields: [orderId], references: [id])
-  workcenter      Workcenter   @relation(fields: [workcenterId], references: [id])
+  id                  Int          @id @default(autoincrement())
+  orderId             Int
+  workcenterId        Int
+  startTime           DateTime
+  endTime             DateTime
+  actualStartTime     DateTime?
+  actualEndTime       DateTime?
+  scheduledUnits      Int
+  actualUnits         Int?
+  laborMinutesPlanned Int?
+  laborMinutesActual  Int?
+  status              String       @default("Planned")
+  notes               String?
+  createdAt           DateTime     @default(now())
+  fromChangeovers     Changeover[] @relation("FromBlock")
+  order               Order        @relation(fields: [orderId], references: [id])
+  toChangeovers       Changeover[] @relation("ToBlock")
+  workcenter          Workcenter   @relation(fields: [workcenterId], references: [id])
 }
 
 model Changeover {
-  id             Int           @id @default(autoincrement())
-  workcenterId   Int
-  fromBlockId    Int
-  toBlockId      Int
-  typeCode       String
-  plannedMinutes Int
-  includeInOee   Boolean       @default(true)
-  complexityTier String?
-  toBlock        ScheduleBlock @relation("ToBlock", fields: [toBlockId], references: [id])
-  fromBlock      ScheduleBlock @relation("FromBlock", fields: [fromBlockId], references: [id])
-  workcenter     Workcenter    @relation(fields: [workcenterId], references: [id])
+  id            Int           @id @default(autoincrement())
+  workcenterId  Int
+  fromBlockId   Int?
+  toBlockId     Int
+  estimatedTime Int
+  actualTime    Int?
+  status        String        @default("Planned")
+  notes         String?
+  createdAt     DateTime      @default(now())
+  toBlock       ScheduleBlock @relation("ToBlock", fields: [toBlockId], references: [id])
+  fromBlock     ScheduleBlock? @relation("FromBlock", fields: [fromBlockId], references: [id])
+  workcenter    Workcenter    @relation(fields: [workcenterId], references: [id])
 }
 
 model Operator {
@@ -182,14 +212,13 @@ model SkillRequirement {
   id           Int        @id @default(autoincrement())
   workcenterId Int
   skillId      Int
-  minLevel     Int
-  isRequired   Boolean    @default(true)
-  shiftType    String?
-  createdAt    DateTime   @default(now())
-  skill        Skill      @relation(fields: [skillId], references: [id])
+  requiredLevel Int       @default(1)
+  isRequired   Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  skill        Skill     @relation(fields: [skillId], references: [id])
   workcenter   Workcenter @relation(fields: [workcenterId], references: [id])
 
-  @@unique([workcenterId, skillId, shiftType])
+  @@unique([workcenterId, skillId])
 }
 
 model ShiftPattern {
@@ -198,8 +227,8 @@ model ShiftPattern {
   description      String?
   startTime        String
   endTime          String
-  hoursPerShift    Float
-  daysPattern      String
+  daysOfWeek       String
+  totalHours       Float
   isActive         Boolean           @default(true)
   createdAt        DateTime          @default(now())
   shiftAssignments ShiftAssignment[]
@@ -213,14 +242,10 @@ model ShiftAssignment {
   startDate      DateTime
   endDate        DateTime?
   isActive       Boolean      @default(true)
-  role           String       @default("Operator")
-  payRate        Float?
-  notes          String?
   createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  operator       Operator     @relation(fields: [operatorId], references: [id])
   shiftPattern   ShiftPattern @relation(fields: [shiftPatternId], references: [id])
   workcenter     Workcenter   @relation(fields: [workcenterId], references: [id])
-  operator       Operator     @relation(fields: [operatorId], references: [id])
 
   @@unique([operatorId, workcenterId, startDate])
 }
