@@ -21,7 +21,8 @@ import {
   MenuItem,
   Grid,
   FormControlLabel,
-  Checkbox
+  Checkbox,
+  Alert
 } from '@mui/material'
 import { Add as AddIcon, Star as StarIcon, Security as SecurityIcon } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -66,6 +67,10 @@ function SkillDialog({ open, onClose }: SkillDialogProps) {
         isCertification: false,
         expiryMonths: ''
       })
+    },
+    onError: (error: any) => {
+      console.error('Error creating skill:', error)
+      // Handle error gracefully - you could add a toast notification here
     }
   })
 
@@ -181,19 +186,38 @@ export default function SkillsManagement() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [categoryFilter, setCategoryFilter] = useState('')
 
-  const { data: skills, isLoading } = useQuery({
+  try {
+
+  const { data: skills, isLoading, error } = useQuery({
     queryKey: ['skills', categoryFilter],
     queryFn: async () => {
-      const params = categoryFilter ? { category: categoryFilter } : {}
-      const response = await api.get('/skills', { params })
-      return response.data
-    }
+      try {
+        const params = categoryFilter ? { category: categoryFilter } : {}
+        const response = await api.get('/skills', { params })
+        return response.data
+      } catch (error) {
+        console.error('Error fetching skills:', error)
+        throw error
+      }
+    },
+    retry: 2,
+    retryDelay: 1000
   })
 
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
         <Typography>Loading skills...</Typography>
+      </Box>
+    )
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 4 }}>
+        <Alert severity="error">
+          Failed to load skills. Please try refreshing the page.
+        </Alert>
       </Box>
     )
   }
@@ -368,4 +392,14 @@ export default function SkillsManagement() {
       />
     </Box>
   )
+  } catch (error) {
+    console.error('Error in SkillsManagement component:', error)
+    return (
+      <Box sx={{ p: 4 }}>
+        <Alert severity="error">
+          An error occurred in the Skills Management component. Please check the console for details.
+        </Alert>
+      </Box>
+    )
+  }
 }

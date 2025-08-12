@@ -612,9 +612,50 @@ app.get('/skills', async (req: FastifyRequest, _reply: FastifyReply) => {
 })
 
 app.post('/skills', async (req: FastifyRequest, reply: FastifyReply) => {
-  const body = NewSkill.parse(req.body)
-  const skill = await prisma.skill.create({ data: body })
-  reply.code(201).send(skill)
+  try {
+    console.log('🔧 Creating new skill:', req.body)
+    const body = NewSkill.parse(req.body)
+    
+    // Check if skill code already exists
+    const existingSkill = await prisma.skill.findFirst({
+      where: { code: body.code }
+    })
+    
+    if (existingSkill) {
+      reply.code(400).send({ 
+        message: 'Skill code already exists', 
+        field: 'code' 
+      })
+      return
+    }
+    
+    const skill = await prisma.skill.create({ 
+      data: body,
+      include: {
+        competencies: {
+          include: {
+            operator: { select: { firstName: true, lastName: true, employeeId: true } }
+          }
+        }
+      }
+    })
+    
+    console.log('✅ Skill created successfully:', skill.code)
+    reply.code(201).send(skill)
+  } catch (error: any) {
+    console.error('❌ Error creating skill:', error)
+    if (error.name === 'ZodError') {
+      reply.code(400).send({ 
+        message: 'Validation failed', 
+        errors: error.errors 
+      })
+    } else {
+      reply.code(500).send({ 
+        message: 'Failed to create skill', 
+        error: error.message 
+      })
+    }
+  }
 })
 
 // COMPETENCIES ENDPOINTS
