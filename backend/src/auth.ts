@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
-import jwt from 'jsonwebtoken'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 import jwksClient from 'jwks-rsa'
 
 // JWKS client for Auth0
@@ -57,8 +57,8 @@ export async function authenticate(
     const token = authHeader.substring(7)
 
     // Verify JWT token
-    const decoded = await new Promise((resolve, reject) => {
-      jwt.verify(token, getKey, jwtOptions, (err, decoded) => {
+    const decoded = await new Promise<JwtPayload | string>((resolve, reject) => {
+      jwt.verify(token, getKey, jwtOptions, (err: any, decoded: any) => {
         if (err) {
           reject(err)
         } else {
@@ -118,8 +118,8 @@ export async function optionalAuth(
     if (authHeader?.startsWith('Bearer ')) {
       const token = authHeader.substring(7)
       
-      const decoded = await new Promise((resolve, reject) => {
-        jwt.verify(token, getKey, jwtOptions, (err, decoded) => {
+      const decoded = await new Promise<JwtPayload | string | null>((resolve, reject) => {
+        jwt.verify(token, getKey, jwtOptions, (err: any, decoded: any) => {
           if (err) {
             // Don't reject for optional auth, just log
             console.log('Optional auth failed:', err.message)
