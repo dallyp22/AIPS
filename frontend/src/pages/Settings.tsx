@@ -108,6 +108,10 @@ export default function Settings(){
     message: '',
     severity: 'success'
   })
+
+  // Data import states
+  const [importLoading, setImportLoading] = useState(false)
+  const [importMessage, setImportMessage] = useState('')
   
   const qc = useQueryClient()
   
@@ -121,6 +125,38 @@ export default function Settings(){
     queryKey: ['holidays'], 
     queryFn: async () => (await api.get('/holidays')).data 
   })
+
+  // Import production data function
+  const handleImportData = async () => {
+    setImportLoading(true)
+    setImportMessage('')
+    
+    try {
+      const response = await apiClient.post('/import-data')
+      if (response.data.success) {
+        setImportMessage('✅ Production data imported successfully!')
+        setSnackbar({
+          open: true,
+          message: 'Production data imported successfully! Navigate to other pages to see the data.',
+          severity: 'success'
+        })
+        // Invalidate all queries to refresh data
+        qc.invalidateQueries()
+      } else {
+        throw new Error(response.data.message || 'Import failed')
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Import failed'
+      setImportMessage(`❌ ${errorMessage}`)
+      setSnackbar({
+        open: true,
+        message: `Import failed: ${errorMessage}`,
+        severity: 'error'
+      })
+    } finally {
+      setImportLoading(false)
+    }
+  }
 
   // Mutations
   const addWorkcenterMut = useMutation({
@@ -597,19 +633,28 @@ export default function Settings(){
                 <Button
                   variant="contained"
                   startIcon={<Upload />}
-                  onClick={() => {/* We'll add this function */}}
+                  onClick={handleImportData}
                   size="large"
                   sx={{ mr: 2 }}
+                  disabled={importLoading}
                 >
-                  Import Production Data
+                  {importLoading ? 'Importing...' : 'Import Production Data'}
                 </Button>
                 
                 <Button
                   variant="outlined"
-                  onClick={() => {/* We'll add this function */}}
+                  onClick={() => qc.invalidateQueries()}
                 >
-                  Check Current Data
+                  Refresh Data
                 </Button>
+
+                {importMessage && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="body2" color={importMessage.includes('✅') ? 'success.main' : 'error.main'}>
+                      {importMessage}
+                    </Typography>
+                  </Box>
+                )}
               </CardContent>
             </Card>
           </Grid>

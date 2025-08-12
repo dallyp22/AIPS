@@ -49,6 +49,17 @@ app.post('/admin/import-production-data', async () => {
   }
 })
 
+// Add import function button endpoint
+app.post('/import-data', async () => {
+  try {
+    const result = await importProductionData()
+    return { success: true, message: 'Production data imported successfully!', data: result }
+  } catch (error) {
+    console.error('Data import failed:', error)
+    return { success: false, message: `Import failed: ${error}` }
+  }
+})
+
 // Authentication endpoints
 app.get('/auth/user', { preHandler: [authenticate] }, async (req: AuthenticatedRequest) => {
   const user = req.user!
