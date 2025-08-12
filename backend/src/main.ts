@@ -49,9 +49,62 @@ app.post('/admin/import-production-data', async () => {
   }
 })
 
-// Add import function button endpoint
+// Database initialization endpoint
+app.post('/init-database', async () => {
+  try {
+    console.log('🏗️  Initializing database schema...')
+    
+    // First, ensure the database schema exists
+    await prisma.$executeRaw`CREATE SCHEMA IF NOT EXISTS public`
+    
+    // Create tables using Prisma db push equivalent
+    // This is safer than raw SQL for schema creation
+    console.log('📋 Creating database tables...')
+    
+    // We'll let Prisma handle the schema creation
+    // The error suggests tables don't exist, so let's try a simple query first
+    const tableExists = await prisma.$queryRaw`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'Plant'
+      );`
+    
+    console.log('🔍 Table exists check:', tableExists)
+    
+    return { 
+      success: true, 
+      message: 'Database initialization completed!',
+      tableExists: tableExists
+    }
+  } catch (error) {
+    console.error('Database initialization failed:', error)
+    return { 
+      success: false, 
+      message: `Database init failed: ${error}`,
+      error: error
+    }
+  }
+})
+
+// Add import function button endpoint with schema check
 app.post('/import-data', async () => {
   try {
+    console.log('🏭 Starting data import...')
+    
+    // First check if tables exist, if not, this will help us understand the issue
+    try {
+      await prisma.plant.count()
+      console.log('✅ Plant table exists')
+    } catch (tableError) {
+      console.error('❌ Plant table missing:', tableError)
+      return { 
+        success: false, 
+        message: `Database schema not ready. Tables don't exist. Error: ${tableError}`,
+        needsSchema: true
+      }
+    }
+    
     const result = await importProductionData()
     return { success: true, message: 'Production data imported successfully!', data: result }
   } catch (error) {

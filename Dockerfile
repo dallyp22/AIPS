@@ -33,5 +33,9 @@ WORKDIR /app/backend
 # Set environment for production
 ENV NODE_ENV=production
 
+# Copy startup script
+COPY backend/start.sh ./start.sh
+RUN chmod +x ./start.sh
+
 # Start the application with database setup
-CMD ["sh", "-c", "echo 'Setting up PostgreSQL database...' && pnpm exec prisma db push || echo 'Database setup failed, continuing...' && echo 'Starting application...' && exec pnpm start"]
+CMD ["./start.sh"]

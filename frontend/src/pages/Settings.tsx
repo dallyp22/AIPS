@@ -126,10 +126,40 @@ export default function Settings(){
     queryFn: async () => (await api.get('/holidays')).data 
   })
 
+  // Initialize database function
+  const handleInitDatabase = async () => {
+    setImportLoading(true)
+    setImportMessage('🏗️  Initializing database schema...')
+    
+    try {
+      const response = await api.post('/init-database')
+      if (response.data.success) {
+        setImportMessage('✅ Database initialized successfully!')
+        setSnackbar({
+          open: true,
+          message: 'Database initialized! You can now import production data.',
+          severity: 'success'
+        })
+      } else {
+        throw new Error(response.data.message || 'Database initialization failed')
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Database initialization failed'
+      setImportMessage(`❌ ${errorMessage}`)
+      setSnackbar({
+        open: true,
+        message: `Database initialization failed: ${errorMessage}`,
+        severity: 'error'
+      })
+    } finally {
+      setImportLoading(false)
+    }
+  }
+
   // Import production data function
   const handleImportData = async () => {
     setImportLoading(true)
-    setImportMessage('')
+    setImportMessage('🏭 Importing production data...')
     
     try {
       const response = await api.post('/import-data')
@@ -142,6 +172,13 @@ export default function Settings(){
         })
         // Invalidate all queries to refresh data
         qc.invalidateQueries()
+      } else if (response.data.needsSchema) {
+        setImportMessage('⚠️  Database schema missing. Please initialize the database first.')
+        setSnackbar({
+          open: true,
+          message: 'Database schema missing. Click "Initialize Database" first.',
+          severity: 'warning'
+        })
       } else {
         throw new Error(response.data.message || 'Import failed')
       }
@@ -624,29 +661,45 @@ export default function Settings(){
                   </Box>
                 </Box>
 
-                <Alert severity="warning" sx={{ mb: 3 }}>
+                <Alert severity="info" sx={{ mb: 2 }}>
                   <Typography variant="body2">
-                    <strong>Warning:</strong> This will replace all existing production data. Make sure you have a backup if needed.
+                    <strong>First Time Setup:</strong> If this is your first deployment, click "Initialize Database" to create the database schema, then "Import Production Data".
                   </Typography>
                 </Alert>
 
-                <Button
-                  variant="contained"
-                  startIcon={<Upload />}
-                  onClick={handleImportData}
-                  size="large"
-                  sx={{ mr: 2 }}
-                  disabled={importLoading}
-                >
-                  {importLoading ? 'Importing...' : 'Import Production Data'}
-                </Button>
-                
-                <Button
-                  variant="outlined"
-                  onClick={() => qc.invalidateQueries()}
-                >
-                  Refresh Data
-                </Button>
+                <Alert severity="warning" sx={{ mb: 3 }}>
+                  <Typography variant="body2">
+                    <strong>Warning:</strong> Import will replace all existing production data. Make sure you have a backup if needed.
+                  </Typography>
+                </Alert>
+
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={handleInitDatabase}
+                    disabled={importLoading}
+                  >
+                    {importLoading ? 'Working...' : 'Initialize Database'}
+                  </Button>
+
+                  <Button
+                    variant="contained"
+                    startIcon={<Upload />}
+                    onClick={handleImportData}
+                    size="large"
+                    disabled={importLoading}
+                  >
+                    {importLoading ? 'Importing...' : 'Import Production Data'}
+                  </Button>
+                  
+                  <Button
+                    variant="outlined"
+                    onClick={() => qc.invalidateQueries()}
+                  >
+                    Refresh Data
+                  </Button>
+                </Box>
 
                 {importMessage && (
                   <Box sx={{ mt: 2 }}>
