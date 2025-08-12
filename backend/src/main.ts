@@ -1024,7 +1024,7 @@ app.setErrorHandler((error: unknown, req, reply) => {
   reply.code(500).send({ message: 'Internal Server Error' })
 })
 
-const PORT = process.env.PORT || 3000
+const PORT = parseInt(process.env.PORT || '3000', 10)
 const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost'
 
 app.listen({ port: PORT, host: HOST }, (err, addr) => {
