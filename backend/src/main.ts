@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { prisma } from './prisma'
 import { authenticate, requireRole, optionalAuth, AuthenticatedRequest } from './auth'
 import { importProductionData } from './importData'
+import { createDatabaseSchema } from './createSchema'
 
 const app = Fastify({ logger: false })
 
@@ -54,15 +55,10 @@ app.post('/init-database', async () => {
   try {
     console.log('🏗️  Initializing database schema...')
     
-    // First, ensure the database schema exists
-    await prisma.$executeRaw`CREATE SCHEMA IF NOT EXISTS public`
+    // Create complete database schema
+    await createDatabaseSchema()
     
-    // Create tables using Prisma db push equivalent
-    // This is safer than raw SQL for schema creation
-    console.log('📋 Creating database tables...')
-    
-    // We'll let Prisma handle the schema creation
-    // The error suggests tables don't exist, so let's try a simple query first
+    // Verify tables were created
     const tableExists = await prisma.$queryRaw`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
@@ -70,11 +66,11 @@ app.post('/init-database', async () => {
         AND table_name = 'Plant'
       );`
     
-    console.log('🔍 Table exists check:', tableExists)
+    console.log('🔍 Table verification:', tableExists)
     
     return { 
       success: true, 
-      message: 'Database initialization completed!',
+      message: 'Database schema created successfully!',
       tableExists: tableExists
     }
   } catch (error) {
@@ -82,7 +78,7 @@ app.post('/init-database', async () => {
     return { 
       success: false, 
       message: `Database init failed: ${error}`,
-      error: error
+      error: error.toString()
     }
   }
 })
