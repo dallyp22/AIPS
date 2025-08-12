@@ -1,0 +1,18 @@
+{
+  "name": "aips-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n API,WEB \"pnpm --filter aips-backend dev\" \"pnpm --filter aips-frontend dev\"",
+    "build": "pnpm -r build",
+    "prisma:migrate": "pnpm --filter aips-backend prisma:migrate"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "pnpm": "^9.7.0"
+  }
+}

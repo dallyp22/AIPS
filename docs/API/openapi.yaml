@@ -1,0 +1,70 @@
+openapi: 3.0.3
+info:
+  title: AIPS Backend API
+  version: 0.1.0
+servers:
+  - url: http://localhost:3000
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses: { '200': { description: OK } }
+  /workcenters:
+    get:
+      summary: List workcenters
+      responses: { '200': { description: OK } }
+    post:
+      summary: Create workcenter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NewWorkcenter' }
+      responses: { '201': { description: Created } }
+  /workcenters/{id}:
+    get:
+      summary: Get workcenter
+      parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK } }
+    patch:
+      summary: Update workcenter
+      parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateWorkcenter' }
+      responses: { '200': { description: OK } }
+  /orders:
+    get: { summary: List orders, responses: { '200': { description: OK } } }
+    post: { summary: Create order, responses: { '201': { description: Created } } }
+  /schedule/board:
+    get: { summary: Get schedule board, responses: { '200': { description: OK } } }
+    post: { summary: Save schedule board layout, responses: { '200': { description: OK } } }
+  /reports/daily:
+    get: { summary: Daily report, responses: { '200': { description: OK } } }
+
+components:
+  schemas:
+    NewWorkcenter:
+      type: object
+      required: [plantId, departmentId, workcenterNo, name, defaultSchemeId]
+      properties:
+        plantId: { type: integer }
+        departmentId: { type: integer }
+        workcenterNo: { type: string }
+        name: { type: string }
+        displayTitle: { type: string }
+        defaultSchemeId: { type: integer }
+        minStaff: { type: integer, default: 0 }
+        gatingRules: { type: object, additionalProperties: { type: integer } }
+        changeoverFamily: { type: string }
+    UpdateWorkcenter:
+      type: object
+      properties:
+        name: { type: string }
+        displayTitle: { type: string }
+        defaultSchemeId: { type: integer }
+        minStaff: { type: integer }
+        gatingRules: { type: object, additionalProperties: { type: integer } }
+        changeoverFamily: { type: string }

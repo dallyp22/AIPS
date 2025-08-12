@@ -1,0 +1,5 @@
+plantId,departmentId,workcenterNo,name,displayTitle,defaultSchemeId,minStaff
+1,1,2101,Line 1,Line 1 – Bottling,1,4
+1,1,2102,Line 2,Line 2 – Bottling,1,4
+1,1,2303,Line 3,Line 3 – Carton,1,4
+1,1,2404,Line 4,Line 4 – Blister,2,4

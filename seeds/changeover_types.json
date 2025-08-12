@@ -1,0 +1,52 @@
+{
+  "A": {
+    "minutes": 10,
+    "includeInOee": true,
+    "notes": "Minor adjust"
+  },
+  "B": {
+    "minutes": 20,
+    "includeInOee": true,
+    "notes": "Standard clean"
+  },
+  "C": {
+    "minutes": 30,
+    "includeInOee": true,
+    "notes": "Deep clean"
+  },
+  "D": {
+    "minutes": 40,
+    "includeInOee": true,
+    "notes": "Setup + clean (L2)"
+  },
+  "E": {
+    "minutes": 50,
+    "includeInOee": true,
+    "notes": "Major setup (L2)"
+  },
+  "F": {
+    "minutes": 60,
+    "includeInOee": true,
+    "notes": "Format change (L2)"
+  },
+  "G": {
+    "minutes": 75,
+    "includeInOee": true,
+    "notes": "Format + tooling (L2)"
+  },
+  "H": {
+    "minutes": 90,
+    "includeInOee": true,
+    "notes": "Sanitation extended (L2)"
+  },
+  "I": {
+    "minutes": 120,
+    "includeInOee": true,
+    "notes": "Sterile prep (L2)"
+  },
+  "J": {
+    "minutes": 150,
+    "includeInOee": true,
+    "notes": "Full teardown (L2)"
+  }
+}

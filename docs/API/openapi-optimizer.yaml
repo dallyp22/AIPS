@@ -1,0 +1,22 @@
+openapi: 3.0.3
+info:
+  title: AIPS Optimizer API
+  version: 0.1.0
+paths:
+  /solve:
+    post:
+      summary: Solve schedule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                workcenters: { type: array, items: { type: object } }
+                orders: { type: array, items: { type: object } }
+                changeoverMatrix: { type: object }
+                objective: { type: object }
+      responses:
+        '200':
+          description: OK

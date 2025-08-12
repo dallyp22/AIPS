@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Plant {
+  id          Int          @id @default(autoincrement())
+  name        String
+  departments Department[]
+  holidays    Holiday[]
+  workcenters Workcenter[]
+}
+
+model Department {
+  id          Int          @id @default(autoincrement())
+  plantId     Int
+  name        String
+  plant       Plant        @relation(fields: [plantId], references: [id])
+  operators   Operator[]
+  workcenters Workcenter[]
+}
+
+model Workcenter {
+  id                Int                @id @default(autoincrement())
+  plantId           Int
+  departmentId      Int
+  workcenterNo      String
+  name              String
+  displayTitle      String?
+  defaultSchemeId   Int?
+  minStaff          Int                @default(0)
+  gatingRules       String?
+  changeoverFamily  String?
+  changeovers       Changeover[]
+  orders            Order[]
+  scheduleBlocks    ScheduleBlock[]
+  shiftAssignments  ShiftAssignment[]
+  skillRequirements SkillRequirement[]
+  department        Department         @relation(fields: [departmentId], references: [id])
+  plant             Plant              @relation(fields: [plantId], references: [id])
+
+  @@unique([plantId, workcenterNo])
+}
+
+model Holiday {
+  id      Int      @id @default(autoincrement())
+  plantId Int
+  date    DateTime
+  label   String?
+  plant   Plant    @relation(fields: [plantId], references: [id])
+}
+
+model SKU {
+  id             Int       @id @default(autoincrement())
+  code           String    @unique
+  family         String
+  familyColorHex String?
+  formula        String?
+  bottleSize     String?
+  caseSize       String?
+  orders         Order[]
+  products       Product[]
+}
+
+model Product {
+  id    Int    @id @default(autoincrement())
+  name  String
+  skuId Int
+  sku   SKU    @relation(fields: [skuId], references: [id])
+}
+
+model Order {
+  id                  Int             @id @default(autoincrement())
+  orderNo             String          @unique
+  skuId               Int
+  qty                 Int
+  runRateUph          Int
+  performanceLeverPct Float           @default(100)
+  priority            Int             @default(3)
+  dueAt               DateTime
+  workcenterId        Int?
+  shopfloorTitle      String?
+  colorHex            String?
+  plannedWorkcenter   Workcenter?     @relation(fields: [workcenterId], references: [id])
+  sku                 SKU             @relation(fields: [skuId], references: [id])
+  scheduleBlocks      ScheduleBlock[]
+}
+
+model ScheduleBlock {
+  id              Int          @id @default(autoincrement())
+  workcenterId    Int
+  orderId         Int?
+  startAt         DateTime
+  endAt           DateTime
+  toChangeovers   Changeover[] @relation("ToBlock")
+  fromChangeovers Changeover[] @relation("FromBlock")
+  order           Order?       @relation(fields: [orderId], references: [id])
+  workcenter      Workcenter   @relation(fields: [workcenterId], references: [id])
+}
+
+model Changeover {
+  id             Int           @id @default(autoincrement())
+  workcenterId   Int
+  fromBlockId    Int
+  toBlockId      Int
+  typeCode       String
+  plannedMinutes Int
+  includeInOee   Boolean       @default(true)
+  complexityTier String?
+  toBlock        ScheduleBlock @relation("ToBlock", fields: [toBlockId], references: [id])
+  fromBlock      ScheduleBlock @relation("FromBlock", fields: [fromBlockId], references: [id])
+  workcenter     Workcenter    @relation(fields: [workcenterId], references: [id])
+}
+
+model Operator {
+  id               Int                  @id @default(autoincrement())
+  employeeId       String               @unique
+  firstName        String
+  lastName         String
+  email            String?
+  phone            String?
+  hireDate         DateTime
+  departmentId     Int?
+  isActive         Boolean              @default(true)
+  basePayRate      Float?
+  emergencyContact String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  department       Department?          @relation(fields: [departmentId], references: [id])
+  competencies     OperatorCompetency[]
+  shiftAssignments ShiftAssignment[]
+}
+
+model Skill {
+  id                Int                  @id @default(autoincrement())
+  code              String               @unique
+  name              String
+  description       String?
+  category          String
+  isCore            Boolean              @default(false)
+  isCertification   Boolean              @default(false)
+  expiryMonths      Int?
+  createdAt         DateTime             @default(now())
+  competencies      OperatorCompetency[]
+  skillRequirements SkillRequirement[]
+}
+
+model OperatorCompetency {
+  id          Int       @id @default(autoincrement())
+  operatorId  Int
+  skillId     Int
+  level       Int
+  certifiedAt DateTime?
+  expiresAt   DateTime?
+  certifiedBy String?
+  notes       String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  skill       Skill     @relation(fields: [skillId], references: [id])
+  operator    Operator  @relation(fields: [operatorId], references: [id])
+
+  @@unique([operatorId, skillId])
+}
+
+model SkillRequirement {
+  id           Int        @id @default(autoincrement())
+  workcenterId Int
+  skillId      Int
+  minLevel     Int
+  isRequired   Boolean    @default(true)
+  shiftType    String?
+  createdAt    DateTime   @default(now())
+  skill        Skill      @relation(fields: [skillId], references: [id])
+  workcenter   Workcenter @relation(fields: [workcenterId], references: [id])
+
+  @@unique([workcenterId, skillId, shiftType])
+}
+
+model ShiftPattern {
+  id               Int               @id @default(autoincrement())
+  name             String            @unique
+  description      String?
+  startTime        String
+  endTime          String
+  hoursPerShift    Float
+  daysPattern      String
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  shiftAssignments ShiftAssignment[]
+}
+
+model ShiftAssignment {
+  id             Int          @id @default(autoincrement())
+  operatorId     Int
+  workcenterId   Int
+  shiftPatternId Int
+  startDate      DateTime
+  endDate        DateTime?
+  isActive       Boolean      @default(true)
+  role           String       @default("Operator")
+  payRate        Float?
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  shiftPattern   ShiftPattern @relation(fields: [shiftPatternId], references: [id])
+  workcenter     Workcenter   @relation(fields: [workcenterId], references: [id])
+  operator       Operator     @relation(fields: [operatorId], references: [id])
+
+  @@unique([operatorId, workcenterId, startDate])
+}

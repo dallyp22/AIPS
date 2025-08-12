@@ -1,0 +1,26 @@
+[
+  {
+    "code": "CO_OVERRUN",
+    "label": "Changeover overrun"
+  },
+  {
+    "code": "BREAKDOWN",
+    "label": "Breakdown/Failure"
+  },
+  {
+    "code": "UP_NOT_READY",
+    "label": "Upstream not ready"
+  },
+  {
+    "code": "LABOR_UNAVAIL",
+    "label": "Labor unavailable"
+  },
+  {
+    "code": "SPEED_BELOW",
+    "label": "Speed below plan"
+  },
+  {
+    "code": "QA_HOLD",
+    "label": "QA hold"
+  }
+]

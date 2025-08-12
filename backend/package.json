@@ -1,0 +1,26 @@
+{
+  "name": "aips-backend",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "prisma:studio": "prisma studio",
+    "seed": "tsx src/seed.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "@prisma/client": "^5.17.0",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.28.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "prisma": "^5.17.0",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.4"
+  }
+}

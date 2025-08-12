@@ -1,0 +1,6 @@
+
+html, body, #root { height: 100%; background: radial-gradient(1200px 800px at 20% 0%, #0E1116, #0B0F14); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
+::-webkit-scrollbar-thumb { background: rgba(1,209,209,0.4); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(1,209,209,0.7); }
