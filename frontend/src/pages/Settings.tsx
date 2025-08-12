@@ -34,7 +34,7 @@ import {
   Checkbox,
   LinearProgress
 } from '@mui/material'
-import { Upload, Database, Factory } from '@mui/icons-material'
+import { Upload, Storage, Factory } from '@mui/icons-material'
 import { useAuth } from '../auth/useAuth'
 import { apiClient } from '../api/client'
 import { 
@@ -563,7 +563,7 @@ export default function Settings(){
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Database sx={{ mr: 1, color: 'primary.main' }} />
+                  <Storage sx={{ mr: 1, color: 'primary.main' }} />
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     Production Data Import
                   </Typography>
