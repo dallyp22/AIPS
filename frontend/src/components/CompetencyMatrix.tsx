@@ -80,6 +80,10 @@ function CompetencyEditDialog({ open, onClose, operator, skill, currentCompetenc
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['competency-matrix'] })
       onClose()
+    },
+    onError: (error: any) => {
+      console.error('Error saving competency:', error)
+      // Handle error gracefully - you could add a toast notification here
     }
   })
 
@@ -195,14 +199,23 @@ export default function CompetencyMatrix() {
     competency?: any
   }>({ open: false })
 
+  try {
+
   // Fetch data
-  const { data: matrixData, isLoading } = useQuery({
+  const { data: matrixData, isLoading, error } = useQuery({
     queryKey: ['competency-matrix', selectedWorkcenter],
     queryFn: async () => {
-      const params = selectedWorkcenter ? { workcenterId: selectedWorkcenter } : {}
-      const response = await api.get('/competency-matrix', { params })
-      return response.data
-    }
+      try {
+        const params = selectedWorkcenter ? { workcenterId: selectedWorkcenter } : {}
+        const response = await api.get('/competency-matrix', { params })
+        return response.data
+      } catch (error) {
+        console.error('Error fetching competency matrix:', error)
+        throw error
+      }
+    },
+    retry: 2,
+    retryDelay: 1000
   })
 
   const { data: workcenters } = useQuery({
@@ -217,6 +230,16 @@ export default function CompetencyMatrix() {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
         <Typography>Loading competency matrix...</Typography>
+      </Box>
+    )
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 4 }}>
+        <Alert severity="error">
+          Failed to load competency matrix. Please try refreshing the page.
+        </Alert>
       </Box>
     )
   }
@@ -501,4 +524,14 @@ export default function CompetencyMatrix() {
       />
     </Box>
   )
+  } catch (error) {
+    console.error('Error in CompetencyMatrix component:', error)
+    return (
+      <Box sx={{ p: 4 }}>
+        <Alert severity="error">
+          An error occurred in the Competency Matrix component. Please check the console for details.
+        </Alert>
+      </Box>
+    )
+  }
 }

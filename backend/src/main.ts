@@ -685,38 +685,113 @@ app.get('/competencies', async (req: FastifyRequest, _reply: FastifyReply) => {
   })
 })
 
-app.post('/competencies', { preHandler: [authenticate, requireRole(['admin', 'manager'])] }, async (req: AuthenticatedRequest, reply: FastifyReply) => {
-  const body = NewCompetency.parse(req.body)
-  const competency = await prisma.operatorCompetency.create({
-    data: {
-      ...body,
-      certifiedAt: body.certifiedAt ? new Date(body.certifiedAt) : null,
-      expiresAt: body.expiresAt ? new Date(body.expiresAt) : null
+app.post('/competencies', async (req: FastifyRequest, reply: FastifyReply) => {
+  try {
+    console.log('🎯 Creating new competency:', req.body)
+    const body = NewCompetency.parse(req.body)
+    
+    // Check if competency already exists
+    const existingCompetency = await prisma.operatorCompetency.findFirst({
+      where: {
+        operatorId: body.operatorId,
+        skillId: body.skillId,
+        isActive: true
+      }
+    })
+    
+    if (existingCompetency) {
+      reply.code(400).send({ 
+        message: 'Competency already exists for this operator and skill', 
+        field: 'combination' 
+      })
+      return
     }
-  })
-  reply.code(201).send(competency)
+    
+    const competency = await prisma.operatorCompetency.create({
+      data: {
+        ...body,
+        certifiedAt: body.certifiedAt ? new Date(body.certifiedAt) : null,
+        expiresAt: body.expiresAt ? new Date(body.expiresAt) : null,
+        isActive: true
+      },
+      include: {
+        operator: { select: { firstName: true, lastName: true, employeeId: true } },
+        skill: true
+      }
+    })
+    
+    console.log('✅ Competency created successfully:', competency.id)
+    reply.code(201).send(competency)
+  } catch (error: any) {
+    console.error('❌ Error creating competency:', error)
+    if (error.name === 'ZodError') {
+      reply.code(400).send({ 
+        message: 'Validation failed', 
+        errors: error.errors 
+      })
+    } else {
+      reply.code(500).send({ 
+        message: 'Failed to create competency', 
+        error: error.message 
+      })
+    }
+  }
 })
 
 app.patch('/competencies/:id', async (req: FastifyRequest, reply: FastifyReply) => {
-  const idParam = z.coerce.number().parse((req.params as any).id)
-  const body = z.object({
-    level: z.number().int().min(1).max(5).optional(),
-    certifiedAt: z.string().datetime().optional().nullable(),
-    expiresAt: z.string().datetime().optional().nullable(),
-    certifiedBy: z.string().max(100).optional().nullable(),
-    notes: z.string().max(500).optional().nullable(),
-    isActive: z.boolean().optional()
-  }).parse(req.body)
-  
-  const updateData: any = { ...body }
-  if (body.certifiedAt) updateData.certifiedAt = new Date(body.certifiedAt)
-  if (body.expiresAt) updateData.expiresAt = new Date(body.expiresAt)
-  
-  const competency = await prisma.operatorCompetency.update({
-    where: { id: idParam },
-    data: updateData
-  })
-  reply.send(competency)
+  try {
+    console.log('🎯 Updating competency:', req.params, req.body)
+    const idParam = z.coerce.number().parse((req.params as any).id)
+    const body = z.object({
+      level: z.number().int().min(1).max(5).optional(),
+      certifiedAt: z.string().datetime().optional().nullable(),
+      expiresAt: z.string().datetime().optional().nullable(),
+      certifiedBy: z.string().max(100).optional().nullable(),
+      notes: z.string().max(500).optional().nullable(),
+      isActive: z.boolean().optional()
+    }).parse(req.body)
+    
+    // Check if competency exists
+    const existingCompetency = await prisma.operatorCompetency.findUnique({
+      where: { id: idParam }
+    })
+    
+    if (!existingCompetency) {
+      reply.code(404).send({ 
+        message: 'Competency not found' 
+      })
+      return
+    }
+    
+    const updateData: any = { ...body }
+    if (body.certifiedAt) updateData.certifiedAt = new Date(body.certifiedAt)
+    if (body.expiresAt) updateData.expiresAt = new Date(body.expiresAt)
+    
+    const competency = await prisma.operatorCompetency.update({
+      where: { id: idParam },
+      data: updateData,
+      include: {
+        operator: { select: { firstName: true, lastName: true, employeeId: true } },
+        skill: true
+      }
+    })
+    
+    console.log('✅ Competency updated successfully:', competency.id)
+    reply.send(competency)
+  } catch (error: any) {
+    console.error('❌ Error updating competency:', error)
+    if (error.name === 'ZodError') {
+      reply.code(400).send({ 
+        message: 'Validation failed', 
+        errors: error.errors 
+      })
+    } else {
+      reply.code(500).send({ 
+        message: 'Failed to update competency', 
+        error: error.message 
+      })
+    }
+  }
 })
 
 // SHIFT PATTERNS ENDPOINTS
