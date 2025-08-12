@@ -36,7 +36,7 @@ import {
 } from '@mui/material'
 import { Upload, Storage, Factory } from '@mui/icons-material'
 import { useAuth } from '../auth/useAuth'
-import { apiClient } from '../api/client'
+import { api } from '../api/client'
 import { 
   Add as AddIcon, 
   Delete as DeleteIcon, 
@@ -132,7 +132,7 @@ export default function Settings(){
     setImportMessage('')
     
     try {
-      const response = await apiClient.post('/import-data')
+      const response = await api.post('/import-data')
       if (response.data.success) {
         setImportMessage('✅ Production data imported successfully!')
         setSnackbar({
