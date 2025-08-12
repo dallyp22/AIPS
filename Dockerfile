@@ -1,9 +1,9 @@
 # Railway Dockerfile for AIPS Backend
 FROM node:18-alpine
 
-# Install pnpm and other dependencies
+# Install pnpm and other dependencies including SQLite
 RUN npm install -g pnpm
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl sqlite
 
 # Set working directory
 WORKDIR /app
@@ -20,8 +20,8 @@ COPY backend ./backend
 # Set working directory to backend
 WORKDIR /app/backend
 
-# Replace the SQLite schema with PostgreSQL schema for production
-RUN cp prisma/schema.production.prisma prisma/schema.prisma
+# Keep SQLite schema for now (PostgreSQL migration can be done later)
+# RUN cp prisma/schema.production.prisma prisma/schema.prisma
 
 # Install dependencies (this will run postinstall and generate Prisma client)
 WORKDIR /app
@@ -31,11 +31,13 @@ RUN pnpm install --frozen-lockfile
 WORKDIR /app/backend
 RUN pnpm run build
 
-# Create a startup script to handle migrations
+# Create a startup script to handle SQLite setup
 RUN echo '#!/bin/sh\n\
-echo "Running database migrations..."\n\
+echo "Setting up SQLite database..."\n\
 cd /app/backend\n\
-pnpm exec prisma migrate deploy || echo "Migration failed, continuing..."\n\
+export DATABASE_URL="file:./data/prod.db"\n\
+mkdir -p ./data\n\
+pnpm exec prisma db push --force-reset || echo "Database setup failed, continuing..."\n\
 echo "Starting application..."\n\
 exec pnpm start' > /app/start.sh && chmod +x /app/start.sh
 
