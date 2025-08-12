@@ -1011,10 +1011,11 @@ app.post('/schedule/board', async (req: FastifyRequest, reply: FastifyReply) => 
 })
 
 app.get('/reports/daily', async (req: FastifyRequest, _reply: FastifyReply) => {
+  const dateParam = (req.query as any)?.date || new Date().toISOString().split('T')[0]
+  const viewMode = (req.query as any)?.viewMode || 'day'
+  
   try {
     console.log('📊 /reports/daily called with query:', req.query)
-    const dateParam = (req.query as any)?.date || new Date().toISOString().split('T')[0]
-    const viewMode = (req.query as any)?.viewMode || 'day'
     console.log('📊 Processing reports/daily:', { dateParam, viewMode })
   
   // Calculate date range based on view mode
