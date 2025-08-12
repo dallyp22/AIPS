@@ -153,9 +153,10 @@ export async function createDatabaseSchema() {
         "departmentId" INTEGER REFERENCES "Department"(id),
         "isActive" BOOLEAN DEFAULT true,
         "basePayRate" DOUBLE PRECISION,
-        "shiftPreference" TEXT,
-        notes TEXT,
-        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        "emergencyContact" TEXT,
+        "tenantId" TEXT DEFAULT 'default',
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `
     
@@ -170,7 +171,8 @@ export async function createDatabaseSchema() {
         "certifiedBy" TEXT,
         notes TEXT,
         "isActive" BOOLEAN DEFAULT true,
-        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `
     
@@ -202,9 +204,16 @@ export async function createDatabaseSchema() {
       CREATE TABLE "ShiftAssignment" (
         id SERIAL PRIMARY KEY,
         "operatorId" INTEGER NOT NULL REFERENCES "Operator"(id),
-        "shiftPatternId" INTEGER NOT NULL REFERENCES "ShiftPattern"(id),
         "workcenterId" INTEGER NOT NULL REFERENCES "Workcenter"(id),
-        date DATE NOT NULL
+        "shiftPatternId" INTEGER NOT NULL REFERENCES "ShiftPattern"(id),
+        "startDate" TIMESTAMP NOT NULL,
+        "endDate" TIMESTAMP,
+        "isActive" BOOLEAN DEFAULT true,
+        role TEXT DEFAULT 'Operator',
+        "payRate" DOUBLE PRECISION,
+        notes TEXT,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `
     
