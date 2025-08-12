@@ -7,7 +7,13 @@
 
 import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    }
+  }
+})
 
 async function seedProduction() {
   console.log('🏭 Starting Production Database Seeding...')
@@ -22,7 +28,7 @@ async function seedProduction() {
     await prisma.scheduleBlock.deleteMany()
     await prisma.order.deleteMany()
     await prisma.product.deleteMany()
-    await prisma.sku.deleteMany()
+    await prisma.sKU.deleteMany()
     await prisma.operator.deleteMany()
     await prisma.skill.deleteMany()
     await prisma.shiftPattern.deleteMany()
@@ -137,24 +143,24 @@ async function seedProduction() {
           description: 'Standard day shift',
           startTime: '06:00',
           endTime: '14:00',
-          daysOfWeek: 'Monday,Tuesday,Wednesday,Thursday,Friday',
-          totalHours: 8
+          daysPattern: 'Monday,Tuesday,Wednesday,Thursday,Friday',
+          hoursPerShift: 8
         },
         {
           name: 'Evening Shift',
           description: 'Evening production shift',
           startTime: '14:00',
           endTime: '22:00',
-          daysOfWeek: 'Monday,Tuesday,Wednesday,Thursday,Friday',
-          totalHours: 8
+          daysPattern: 'Monday,Tuesday,Wednesday,Thursday,Friday',
+          hoursPerShift: 8
         },
         {
           name: 'Night Shift',
           description: 'Night maintenance shift',
           startTime: '22:00',
           endTime: '06:00',
-          daysOfWeek: 'Sunday,Monday,Tuesday,Wednesday,Thursday',
-          totalHours: 8
+          daysPattern: 'Sunday,Monday,Tuesday,Wednesday,Thursday',
+          hoursPerShift: 8
         }
       ]
     })
@@ -191,32 +197,29 @@ async function seedProduction() {
     // 6. Create SKUs and Products
     console.log('📦 Creating products...')
     const skus = [
-      { skuNo: 'CTRL-001', name: 'Industrial Controller Pro', family: 'Controllers', baseProcessingTime: 120, setupTime: 30, idealCycleTime: 8 },
-      { skuNo: 'SENS-002', name: 'Temperature Sensor Array', family: 'Sensors', baseProcessingTime: 45, setupTime: 15, idealCycleTime: 3 },
-      { skuNo: 'MOTO-003', name: 'Servo Motor Assembly', family: 'Motors', baseProcessingTime: 180, setupTime: 45, idealCycleTime: 12 },
-      { skuNo: 'DISP-004', name: 'HMI Display Unit', family: 'Displays', baseProcessingTime: 90, setupTime: 20, idealCycleTime: 6 },
-      { skuNo: 'CABL-005', name: 'Industrial Cable Harness', family: 'Cables', baseProcessingTime: 60, setupTime: 10, idealCycleTime: 4 },
-      { skuNo: 'POWR-006', name: 'Power Supply Module', family: 'Power', baseProcessingTime: 150, setupTime: 35, idealCycleTime: 10 },
-      { skuNo: 'SAFE-007', name: 'Safety Relay System', family: 'Safety', baseProcessingTime: 200, setupTime: 50, idealCycleTime: 15 }
+      { code: 'CTRL-001', family: 'Controllers', familyColorHex: '#2196F3' },
+      { code: 'SENS-002', family: 'Sensors', familyColorHex: '#4CAF50' },
+      { code: 'MOTO-003', family: 'Motors', familyColorHex: '#FF9800' },
+      { code: 'DISP-004', family: 'Displays', familyColorHex: '#9C27B0' },
+      { code: 'CABL-005', family: 'Cables', familyColorHex: '#607D8B' },
+      { code: 'POWR-006', family: 'Power', familyColorHex: '#F44336' },
+      { code: 'SAFE-007', family: 'Safety', familyColorHex: '#FF5722' }
     ]
 
     for (const sku of skus) {
-      await prisma.sku.create({
+      await prisma.sKU.create({
         data: {
           ...sku,
-          colorCode: `#${Math.floor(Math.random()*16777215).toString(16)}`,
           products: {
             create: {
-              bomVersion: '1.0',
-              yield: 0.95 + Math.random() * 0.04, // 95-99% yield
-              scrapRate: Math.random() * 0.03 // 0-3% scrap
+              name: `Product for ${sku.code}`
             }
           }
         }
       })
     }
 
-    const skuList = await prisma.sku.findMany()
+    const skuList = await prisma.sKU.findMany()
 
     // 7. Create Production Orders (Active Manufacturing)
     console.log('📋 Creating production orders...')
@@ -226,18 +229,19 @@ async function seedProduction() {
     for (let i = 0; i < 25; i++) {
       const sku = skuList[Math.floor(Math.random() * skuList.length)]
       const wc = wcList[Math.floor(Math.random() * wcList.length)]
-      const dueDate = new Date(today.getTime() + (Math.random() * 14 + 1) * 24 * 60 * 60 * 1000) // 1-14 days from now
+      const dueAt = new Date(today.getTime() + (Math.random() * 14 + 1) * 24 * 60 * 60 * 1000) // 1-14 days from now
       
       orders.push({
         orderNo: `ORD-${String(i + 1).padStart(4, '0')}`,
         skuId: sku.id,
         workcenterId: wc.id,
-        quantity: Math.floor(Math.random() * 500) + 50, // 50-550 units
-        priority: Math.floor(Math.random() * 10) + 1,
-        dueDate,
-        startDate: new Date(today.getTime() - Math.random() * 7 * 24 * 60 * 60 * 1000), // Started within last week
-        isRush: Math.random() > 0.8, // 20% rush orders
-        performanceLever: 0.85 + Math.random() * 0.3 // 85-115% performance
+        qty: Math.floor(Math.random() * 500) + 50, // 50-550 units
+        runRateUph: Math.floor(Math.random() * 100) + 20, // 20-120 units per hour
+        priority: Math.floor(Math.random() * 5) + 1, // 1-5 priority
+        dueAt,
+        performanceLeverPct: 85 + Math.random() * 30, // 85-115% performance
+        shopfloorTitle: `Production Run ${i + 1}`,
+        colorHex: `#${Math.floor(Math.random()*16777215).toString(16)}`
       })
     }
 
@@ -250,30 +254,25 @@ async function seedProduction() {
     // 8. Create Schedule Blocks (Current Production Schedule)
     console.log('📅 Creating production schedule...')
     for (const order of orderList.slice(0, 15)) { // Schedule first 15 orders
-      const sku = skuList.find(s => s.id === order.skuId)!
-      const processingTime = sku.baseProcessingTime! * order.quantity / 60 // Convert to minutes
+      // Estimate processing time based on quantity
+      const processingTimeHours = Math.max(1, order.qty / order.runRateUph) // Use actual run rate
       
-      const startTime = new Date(order.startDate!)
-      const endTime = new Date(startTime.getTime() + processingTime * 60 * 1000)
+      const startTime = new Date(today.getTime() - Math.random() * 7 * 24 * 60 * 60 * 1000) // Started within last week
+      const endTime = new Date(startTime.getTime() + processingTimeHours * 60 * 60 * 1000)
       
       await prisma.scheduleBlock.create({
         data: {
           orderId: order.id,
-          workcenterId: order.workcenterId,
-          startTime,
-          endTime,
-          scheduledUnits: order.quantity,
-          actualUnits: Math.random() > 0.3 ? Math.floor(order.quantity * (0.8 + Math.random() * 0.4)) : null, // 70% have actuals
-          laborMinutesPlanned: Math.floor(processingTime * 0.8),
-          laborMinutesActual: Math.random() > 0.3 ? Math.floor(processingTime * (0.7 + Math.random() * 0.6)) : null,
-          status: Math.random() > 0.4 ? 'In Progress' : Math.random() > 0.7 ? 'Completed' : 'Planned'
+          workcenterId: order.workcenterId!,
+          startAt: startTime,
+          endAt: endTime
         }
       })
     }
 
     // 9. Create Changeovers
     console.log('🔄 Creating changeovers...')
-    const scheduleBlocks = await prisma.scheduleBlock.findMany({ orderBy: { startTime: 'asc' } })
+    const scheduleBlocks = await prisma.scheduleBlock.findMany({ orderBy: { startAt: 'asc' } })
     
     for (let i = 0; i < scheduleBlocks.length - 1; i++) {
       const currentBlock = scheduleBlocks[i]
@@ -285,9 +284,9 @@ async function seedProduction() {
             workcenterId: currentBlock.workcenterId,
             fromBlockId: currentBlock.id,
             toBlockId: nextBlock.id,
-            estimatedTime: Math.floor(Math.random() * 60) + 15, // 15-75 minutes
-            actualTime: Math.random() > 0.3 ? Math.floor(Math.random() * 90) + 10 : null,
-            status: Math.random() > 0.5 ? 'Completed' : 'Planned'
+            typeCode: `CO-${Math.floor(Math.random() * 10) + 1}`, // Random changeover type
+            plannedMinutes: Math.floor(Math.random() * 60) + 15, // 15-75 minutes
+            complexityTier: Math.random() > 0.5 ? 'Standard' : 'Complex'
           }
         })
       }
@@ -335,11 +334,11 @@ async function seedProduction() {
     console.log('🎉 Creating holidays...')
     const currentYear = new Date().getFullYear()
     const holidays = [
-      { date: new Date(currentYear, 0, 1), name: 'New Year\'s Day' },
-      { date: new Date(currentYear, 6, 4), name: 'Independence Day' },
-      { date: new Date(currentYear, 8, 4), name: 'Labor Day' },
-      { date: new Date(currentYear, 10, 23), name: 'Thanksgiving' },
-      { date: new Date(currentYear, 11, 25), name: 'Christmas Day' }
+      { date: new Date(currentYear, 0, 1), label: 'New Year\'s Day' },
+      { date: new Date(currentYear, 6, 4), label: 'Independence Day' },
+      { date: new Date(currentYear, 8, 4), label: 'Labor Day' },
+      { date: new Date(currentYear, 10, 23), label: 'Thanksgiving' },
+      { date: new Date(currentYear, 11, 25), label: 'Christmas Day' }
     ]
 
     for (const holiday of holidays) {
@@ -347,7 +346,7 @@ async function seedProduction() {
         data: {
           plantId: plant.id,
           date: holiday.date,
-          name: holiday.name
+          label: holiday.label
         }
       })
     }
