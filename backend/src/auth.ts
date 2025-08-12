@@ -45,9 +45,13 @@ export async function authenticate(
   reply: FastifyReply
 ): Promise<void> {
   try {
+    console.log('🔒 Auth Debug - Domain:', process.env.AUTH0_DOMAIN)
+    console.log('🔒 Auth Debug - Audience:', process.env.AUTH0_AUDIENCE)
+    
     const authHeader = request.headers.authorization
     
     if (!authHeader?.startsWith('Bearer ')) {
+      console.log('🔒 Auth Failed: No bearer token')
       return reply.status(401).send({ 
         error: 'Unauthorized', 
         message: 'Missing or invalid authorization header' 
