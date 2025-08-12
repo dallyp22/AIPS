@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
-import jwt, { JwtPayload } from 'jsonwebtoken'
+import jwt, { JwtPayload, Algorithm, VerifyOptions } from 'jsonwebtoken'
 import jwksClient from 'jwks-rsa'
 
 // JWKS client for Auth0
@@ -22,7 +22,7 @@ function getKey(header: any, callback: any) {
 }
 
 // JWT verification options
-const jwtOptions = {
+const jwtOptions: VerifyOptions = {
   audience: process.env.AUTH0_AUDIENCE,
   issuer: `https://${process.env.AUTH0_DOMAIN}/`,
   algorithms: ['RS256'],
