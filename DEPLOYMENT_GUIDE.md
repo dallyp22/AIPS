@@ -29,7 +29,7 @@ In Railway, go to your backend service → **"Variables"** tab and add:
 
 ```bash
 # Database (automatically provided by Railway)
-DATABASE_URL=postgresql://postgres:xxx@xxx.railway.app:5432/railway
+DATABASE_URL=postgresql://postgres:FyakUKmJeNIqcWADBcAdWkWwNDvNnQVg@postgres.railway.internal:5432/railway
 
 # Auth0 Configuration
 AUTH0_DOMAIN=dev-nb6hi0n2pk2u0vtw.us.auth0.com
