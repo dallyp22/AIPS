@@ -29,7 +29,7 @@ app.get('/plants', async () => {
       }
     })
     return plants
-  } catch (error) {
+  } catch (error: any) {
     console.error('Plants error:', error)
     throw error
   }
@@ -44,7 +44,7 @@ app.post('/admin/import-production-data', async () => {
   try {
     const result = await importProductionData()
     return result
-  } catch (error) {
+  } catch (error: any) {
     console.error('Import failed:', error)
     throw error
   }
@@ -73,7 +73,7 @@ app.post('/init-database', async () => {
       message: 'Database schema created successfully!',
       tableExists: tableExists
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Database initialization failed:', error)
     return { 
       success: false, 
@@ -103,7 +103,7 @@ app.post('/import-data', async () => {
     
     const result = await importProductionData()
     return { success: true, message: 'Production data imported successfully!', data: result }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Data import failed:', error)
     return { success: false, message: `Import failed: ${error}` }
   }

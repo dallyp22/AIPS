@@ -9,10 +9,100 @@ const cors_1 = __importDefault(require("@fastify/cors"));
 const zod_1 = require("zod");
 const prisma_1 = require("./prisma");
 const auth_1 = require("./auth");
+const importData_1 = require("./importData");
+const createSchema_1 = require("./createSchema");
 const app = (0, fastify_1.default)({ logger: false });
 const allowedOrigin = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:5173'];
-app.register(cors_1.default, { origin: allowedOrigin });
+console.log('🔒 CORS allowed origins:', allowedOrigin);
+app.register(cors_1.default, {
+    origin: allowedOrigin,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+});
 app.get('/health', async () => ({ ok: true, ts: Date.now() }));
+// Basic data endpoints
+app.get('/plants', async () => {
+    try {
+        const plants = await prisma_1.prisma.plant.findMany({
+            include: {
+                departments: true,
+                workcenters: true
+            }
+        });
+        return plants;
+    }
+    catch (error) {
+        console.error('Plants error:', error);
+        throw error;
+    }
+});
+// Orders endpoint moved below
+// Operators endpoint moved below with authentication
+// Data import endpoint
+app.post('/admin/import-production-data', async () => {
+    try {
+        const result = await (0, importData_1.importProductionData)();
+        return result;
+    }
+    catch (error) {
+        console.error('Import failed:', error);
+        throw error;
+    }
+});
+// Database initialization endpoint
+app.post('/init-database', async () => {
+    try {
+        console.log('🏗️  Initializing database schema...');
+        // Create complete database schema
+        await (0, createSchema_1.createDatabaseSchema)();
+        // Verify tables were created
+        const tableExists = await prisma_1.prisma.$queryRaw `
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'Plant'
+      );`;
+        console.log('🔍 Table verification:', tableExists);
+        return {
+            success: true,
+            message: 'Database schema created successfully!',
+            tableExists: tableExists
+        };
+    }
+    catch (error) {
+        console.error('Database initialization failed:', error);
+        return {
+            success: false,
+            message: `Database init failed: ${error}`,
+            error: error.toString()
+        };
+    }
+});
+// Add import function button endpoint with schema check
+app.post('/import-data', async () => {
+    try {
+        console.log('🏭 Starting data import...');
+        // First check if tables exist, if not, this will help us understand the issue
+        try {
+            await prisma_1.prisma.plant.count();
+            console.log('✅ Plant table exists');
+        }
+        catch (tableError) {
+            console.error('❌ Plant table missing:', tableError);
+            return {
+                success: false,
+                message: `Database schema not ready. Tables don't exist. Error: ${tableError}`,
+                needsSchema: true
+            };
+        }
+        const result = await (0, importData_1.importProductionData)();
+        return { success: true, message: 'Production data imported successfully!', data: result };
+    }
+    catch (error) {
+        console.error('Data import failed:', error);
+        return { success: false, message: `Import failed: ${error}` };
+    }
+});
 // Authentication endpoints
 app.get('/auth/user', { preHandler: [auth_1.authenticate] }, async (req) => {
     const user = req.user;
@@ -918,10 +1008,12 @@ app.setErrorHandler((error, req, reply) => {
     req.log?.error(error);
     reply.code(500).send({ message: 'Internal Server Error' });
 });
-app.listen({ port: 3000 }, (err, addr) => {
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+app.listen({ port: PORT, host: HOST }, (err, addr) => {
     if (err) {
         console.error(err);
         process.exit(1);
     }
-    console.log('AIPS API on', addr);
+    console.log('🚀 AIPS API on', addr);
 });

@@ -34,14 +34,22 @@ const jwtOptions = {
 // Auth middleware
 async function authenticate(request, reply) {
     try {
+        console.log('🔒 Auth Debug - Domain:', process.env.AUTH0_DOMAIN);
+        console.log('🔒 Auth Debug - Audience:', process.env.AUTH0_AUDIENCE);
         const authHeader = request.headers.authorization;
         if (!authHeader?.startsWith('Bearer ')) {
+            console.log('🔒 Auth Failed: No bearer token');
             return reply.status(401).send({
                 error: 'Unauthorized',
                 message: 'Missing or invalid authorization header'
             });
         }
         const token = authHeader.substring(7);
+        // Debug: Decode token without verification to see audience
+        const unverifiedDecoded = jsonwebtoken_1.default.decode(token, { complete: true });
+        const payload = unverifiedDecoded?.payload;
+        console.log('🔍 Token Debug - Audience in token:', payload?.aud);
+        console.log('🔍 Token Debug - Expected audience:', process.env.AUTH0_AUDIENCE);
         // Verify JWT token
         const decoded = await new Promise((resolve, reject) => {
             jsonwebtoken_1.default.verify(token, getKey, jwtOptions, (err, decoded) => {
